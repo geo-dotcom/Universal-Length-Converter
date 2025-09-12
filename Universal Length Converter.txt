@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Length Unit Converter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #6c757d;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .tab:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 40px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .converter-section {
+            display: grid;
+            grid-template-columns: 1fr 80px 1fr;
+            gap: 30px;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .input-group {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .input-group:focus-within {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .swap-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .swap-button:hover {
+            transform: rotate(180deg) scale(1.1);
+        }
+
+        .file-upload {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: 3px dashed #dee2e6;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-label {
+            display: inline-block;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .file-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .download-template {
+            background: #28a745;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .download-template:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .results-table {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-top: 30px;
+        }
+
+        .results-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .results-table th {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .results-table td {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .results-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .results-table tr:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .format-example {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .format-example h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .format-example table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .format-example th, .format-example td {
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            text-align: left;
+        }
+
+        .format-example th {
+            background: #e9ecef;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .converter-section {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .swap-button {
+                transform: rotate(90deg);
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .tab {
+                font-size: 1rem;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Universal Length Converter</h1>
+            <p>Convert between all major length units with precision</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('manual')">Manual Converter</button>
+            <button class="tab" onclick="showTab('excel')">Excel File Converter</button>
+            <button class="tab" onclick="showTab('format')">Excel Format Guide</button>
+        </div>
+
+        <!-- Manual Converter Tab -->
+        <div id="manual" class="tab-content active">
+            <div class="converter-section">
+                <div class="input-group">
+                    <label for="fromValue">From Value:</label>
+                    <input type="number" id="fromValue" step="any" placeholder="Enter value" oninput="convertValue()">
+                    <label for="fromUnit" style="margin-top: 15px;">From Unit:</label>
+                    <select id="fromUnit" onchange="convertValue()">
+                        <optgroup label="Metric System">
+                            <option value="nm">Nanometer (nm)</option>
+                            <option value="μm">Micrometer (μm)</option>
+                            <option value="mm">Millimeter (mm)</option>
+                            <option value="cm">Centimeter (cm)</option>
+                            <option value="dm">Decimeter (dm)</option>
+                            <option value="m" selected>Meter (m)</option>
+                            <option value="dam">Dekameter (dam)</option>
+                            <option value="hm">Hectometer (hm)</option>
+                            <option value="km">Kilometer (km)</option>
+                        </optgroup>
+                        <optgroup label="Imperial/US System">
+                            <option value="in">Inch (in)</option>
+                            <option value="ft">Foot (ft)</option>
+                            <option value="yd">Yard (yd)</option>
+                            <option value="rod">Rod</option>
+                            <option value="furlong">Furlong</option>
+                            <option value="mi">Mile (mi)</option>
+                            <option value="league">League</option>
+                        </optgroup>
+                        <optgroup label="Nautical">
+                            <option value="nmi">Nautical Mile (nmi)</option>
+                            <option value="cable">Cable Length</option>
+                            <option value="fathom">Fathom</option>
+                        </optgroup>
+                        <optgroup label="Scientific">
+                            <option value="angstrom">Angstrom (Å)</option>
+                            <option value="pm">Picometer (pm)</option>
+                            <option value="fm">Femtometer (fm)</option>
+                            <option value="au">Astronomical Unit (AU)</option>
+                            <option value="ly">Light-year (ly)</option>
+                            <option value="pc">Parsec (pc)</option>
+                        </optgroup>
+                        <optgroup label="Historical/Regional">
+                            <option value="cubit">Cubit</option>
+                            <option value="span">Span</option>
+                            <option value="hand">Hand</option>
+                            <option value="ell">Ell</option>
+                            <option value="chain">Chain</option>
+                            <option value="perch">Perch/Pole</option>
+                        </optgroup>
+                        <optgroup label="Typography">
+                            <option value="pt">Point (pt)</option>
+                            <option value="pica">Pica</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <button class="swap-button" onclick="swapUnits()">⇄</button>
+
+                <div class="input-group">
+                    <label for="toValue">To Value:</label>
+                    <input type="number" id="toValue" step="any" readonly>
+                    <label for="toUnit" style="margin-top: 15px;">To Unit:</label>
+                    <select id="toUnit" onchange="convertValue()">
+                        <optgroup label="Metric System">
+                            <option value="nm">Nanometer (nm)</option>
+                            <option value="μm">Micrometer (μm)</option>
+                            <option value="mm">Millimeter (mm)</option>
+                            <option value="cm">Centimeter (cm)</option>
+                            <option value="dm">Decimeter (dm)</option>
+                            <option value="m">Meter (m)</option>
+                            <option value="dam">Dekameter (dam)</option>
+                            <option value="hm">Hectometer (hm)</option>
+                            <option value="km" selected>Kilometer (km)</option>
+                        </optgroup>
+                        <optgroup label="Imperial/US System">
+                            <option value="in">Inch (in)</option>
+                            <option value="ft">Foot (ft)</option>
+                            <option value="yd">Yard (yd)</option>
+                            <option value="rod">Rod</option>
+                            <option value="furlong">Furlong</option>
+                            <option value="mi">Mile (mi)</option>
+                            <option value="league">League</option>
+                        </optgroup>
+                        <optgroup label="Nautical">
+                            <option value="nmi">Nautical Mile (nmi)</option>
+                            <option value="cable">Cable Length</option>
+                            <option value="fathom">Fathom</option>
+                        </optgroup>
+                        <optgroup label="Scientific">
+                            <option value="angstrom">Angstrom (Å)</option>
+                            <option value="pm">Picometer (pm)</option>
+                            <option value="fm">Femtometer (fm)</option>
+                            <option value="au">Astronomical Unit (AU)</option>
+                            <option value="ly">Light-year (ly)</option>
+                            <option value="pc">Parsec (pc)</option>
+                        </optgroup>
+                        <optgroup label="Historical/Regional">
+                            <option value="cubit">Cubit</option>
+                            <option value="span">Span</option>
+                            <option value="hand">Hand</option>
+                            <option value="ell">Ell</option>
+                            <option value="chain">Chain</option>
+                            <option value="perch">Perch/Pole</option>
+                        </optgroup>
+                        <optgroup label="Typography">
+                            <option value="pt">Point (pt)</option>
+                            <option value="pica">Pica</option>
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Excel Converter Tab -->
+        <div id="excel" class="tab-content">
+            <div class="file-upload">
+                <h3>Upload Excel File for Batch Conversion</h3>
+                <p>Upload an Excel file with values and units for batch conversion</p>
+                <input type="file" id="excelFile" class="file-input" accept=".xlsx,.xls" onchange="handleExcelFile(event)">
+                <label for="excelFile" class="file-label">Choose Excel File</label>
+                <br>
+                <button class="download-template" onclick="downloadTemplate()">Download Template</button>
+            </div>
+
+            <div id="excelResults" class="results-table" style="display: none;">
+                <table id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>Original Value</th>
+                            <th>From Unit</th>
+                            <th>Converted Value</th>
+                            <th>To Unit</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Format Guide Tab -->
+        <div id="format" class="tab-content">
+            <div class="format-example">
+                <h3>Excel File Format Requirements</h3>
+                <p>Your Excel file must contain the following columns in this exact order:</p>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Column A</th>
+                            <th>Column B</th>
+                            <th>Column C</th>
+                            <th>Column D</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Value</strong></td>
+                            <td><strong>From_Unit</strong></td>
+                            <td><strong>To_Unit</strong></td>
+                            <td><strong>Description</strong> (Optional)</td>
+                        </tr>
+                        <tr>
+                            <td>100</td>
+                            <td>m</td>
+                            <td>ft</td>
+                            <td>Building height</td>
+                        </tr>
+                        <tr>
+                            <td>5.5</td>
+                            <td>km</td>
+                            <td>mi</td>
+                            <td>Distance to store</td>
+                        </tr>
+                        <tr>
+                            <td>2.54</td>
+                            <td>in</td>
+                            <td>cm</td>
+                            <td>Screen size</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="format-example">
+                <h3>Supported Unit Codes</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                    <div>
+                        <h4>Metric System:</h4>
+                        <ul>
+                            <li>nm - Nanometer</li>
+                            <li>μm - Micrometer</li>
+                            <li>mm - Millimeter</li>
+                            <li>cm - Centimeter</li>
+                            <li>dm - Decimeter</li>
+                            <li>m - Meter</li>
+                            <li>dam - Dekameter</li>
+                            <li>hm - Hectometer</li>
+                            <li>km - Kilometer</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Imperial/US System:</h4>
+                        <ul>
+                            <li>in - Inch</li>
+                            <li>ft - Foot</li>
+                            <li>yd - Yard</li>
+                            <li>rod - Rod</li>
+                            <li>furlong - Furlong</li>
+                            <li>mi - Mile</li>
+                            <li>league - League</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Nautical:</h4>
+                        <ul>
+                            <li>nmi - Nautical Mile</li>
+                            <li>cable - Cable Length</li>
+                            <li>fathom - Fathom</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4>Scientific:</h4>
+                        <ul>
+                            <li>angstrom - Angstrom</li>
+                            <li>pm - Picometer</li>
+                            <li>fm - Femtometer</li>
+                            <li>au - Astronomical Unit</li>
+                            <li>ly - Light-year</li>
+                            <li>pc - Parsec</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Conversion factors to meters
+        const conversionFactors = {
+            // Metric
+            'nm': 1e-9,
+            'μm': 1e-6,
+            'mm': 1e-3,
+            'cm': 1e-2,
+            'dm': 1e-1,
+            'm': 1,
+            'dam': 1e1,
+            'hm': 1e2,
+            'km': 1e3,
+            
+            // Imperial/US
+            'in': 0.0254,
+            'ft': 0.3048,
+            'yd': 0.9144,
+            'rod': 5.0292,
+            'furlong': 201.168,
+            'mi': 1609.344,
+            'league': 4828.032,
+            
+            // Nautical
+            'nmi': 1852,
+            'cable': 185.2,
+            'fathom': 1.8288,
+            
+            // Scientific
+            'angstrom': 1e-10,
+            'pm': 1e-12,
+            'fm': 1e-15,
+            'au': 149597870700,
+            'ly': 9.460730472580800e15,
+            'pc': 3.0856775814913673e16,
+            
+            // Historical/Regional
+            'cubit': 0.4572,
+            'span': 0.2286,
+            'hand': 0.1016,
+            'ell': 1.143,
+            'chain': 20.1168,
+            'perch': 5.0292,
+            
+            // Typography
+            'pt': 0.000352778,
+            'pica': 0.004233333
+        };
+
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+
+        function convertValue() {
+            const fromValue = parseFloat(document.getElementById('fromValue').value);
+            const fromUnit = document.getElementById('fromUnit').value;
+            const toUnit = document.getElementById('toUnit').value;
+            
+            if (isNaN(fromValue)) {
+                document.getElementById('toValue').value = '';
+                return;
+            }
+            
+            // Convert to meters first, then to target unit
+            const metersValue = fromValue * conversionFactors[fromUnit];
+            const convertedValue = metersValue / conversionFactors[toUnit];
+            
+            // Format the result appropriately
+            let result;
+            if (convertedValue === 0) {
+                result = 0;
+            } else if (Math.abs(convertedValue) < 1e-6) {
+                result = convertedValue.toExponential(6);
+            } else if (Math.abs(convertedValue) > 1e6) {
+                result = convertedValue.toExponential(6);
+            } else {
+                result = parseFloat(convertedValue.toPrecision(10));
+            }
+            
+            document.getElementById('toValue').value = result;
+        }
+
+        function swapUnits() {
+            const fromUnit = document.getElementById('fromUnit').value;
+            const toUnit = document.getElementById('toUnit').value;
+            const fromValue = document.getElementById('fromValue').value;
+            const toValue = document.getElementById('toValue').value;
+            
+            document.getElementById('fromUnit').value = toUnit;
+            document.getElementById('toUnit').value = fromUnit;
+            document.getElementById('fromValue').value = toValue;
+            
+            convertValue();
+        }
+
+        function downloadTemplate() {
+            const template = [
+                ['Value', 'From_Unit', 'To_Unit', 'Description'],
+                [100, 'm', 'ft', 'Building height'],
+                [5.5, 'km', 'mi', 'Distance to store'],
+                [2.54, 'in', 'cm', 'Screen size'],
+                [1000, 'mm', 'in', 'Pipe length'],
+                [50, 'yd', 'm', 'Track distance']
+            ];
+            
+            const ws = XLSX.utils.aoa_to_sheet(template);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Length Conversions');
+            
+            XLSX.writeFile(wb, 'length_converter_template.xlsx');
+        }
+
+        function handleExcelFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                    
+                    processExcelData(jsonData);
+                } catch (error) {
+                    alert('Error reading Excel file: ' + error.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function processExcelData(data) {
+            const resultsTable = document.getElementById('resultsTable').getElementsByTagName('tbody')[0];
+            resultsTable.innerHTML = '';
+            
+            data.forEach((row, index) => {
+                const value = parseFloat(row.Value || row.value);
+                const fromUnit = row.From_Unit || row.from_unit;
+                const toUnit = row.To_Unit || row.to_unit;
+                const description = row.Description || row.description || '';
+                
+                let convertedValue = 'Error';
+                let status = 'Failed';
+                
+                if (!isNaN(value) && conversionFactors[fromUnit] && conversionFactors[toUnit]) {
+                    const metersValue = value * conversionFactors[fromUnit];
+                    const result = metersValue / conversionFactors[toUnit];
+                    
+                    if (result === 0) {
+                        convertedValue = 0;
+                    } else if (Math.abs(result) < 1e-6) {
+                        convertedValue = result.toExponential(6);
+                    } else if (Math.abs(result) > 1e6) {
+                        convertedValue = result.toExponential(6);
+                    } else {
+                        convertedValue = parseFloat(result.toPrecision(10));
+                    }
+                    status = 'Success';
+                } else {
+                    if (isNaN(value)) status = 'Invalid Value';
+                    else if (!conversionFactors[fromUnit]) status = 'Invalid From Unit';
+                    else if (!conversionFactors[toUnit]) status = 'Invalid To Unit';
+                }
+                
+                const newRow = resultsTable.insertRow();
+                newRow.innerHTML = `
+                    <td>${value || 'N/A'}</td>
+                    <td>${fromUnit || 'N/A'}</td>
+                    <td>${convertedValue}</td>
+                    <td>${toUnit || 'N/A'}</td>
+                    <td style="color: ${status === 'Success' ? 'green' : 'red'}">${status}</td>
+                `;
+            });
+            
+            document.getElementById('excelResults').style.display = 'block';
+        }
+
+        // Initialize with default conversion
+        convertValue();
+    </script>
+</body>
+</html>
